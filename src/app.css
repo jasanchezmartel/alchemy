@@ -1,0 +1,185 @@
+:root {
+  /* Core Colors - Infinite Alchemy Palette */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #7c3aed;
+  --accent-glow: rgba(139, 92, 246, 0.4);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* State Colors */
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+
+  /* Visual Effects */
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(12px);
+  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --glow-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+
+  /* Layout & Spacing */
+  --sidebar-width: 320px;
+  --header-height: 64px;
+  --border-radius-lg: 24px;
+  --border-radius-md: 16px;
+  --border-radius-sm: 8px;
+  --border-radius-full: 9999px;
+
+  /* Borders & Dividers */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.2);
+  --border-dark: rgba(0, 0, 0, 0.2);
+
+  /* Text Variations */
+  --text-light: #ffffff;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-faded: rgba(255, 255, 255, 0.35);
+  --text-faded-light: rgba(255, 255, 255, 0.45);
+  --text-faded-dark: rgba(255, 255, 255, 0.2);
+
+  /* Category Colors */
+  --category-origin: #f87171;
+  --category-phenomena: #60a5fa;
+  --category-materials: #a8a29e;
+  --category-life: #4ade80;
+  --category-technology: #22d3ee;
+  --category-space: #c084fc;
+  --category-objects: #fbbf24;
+  --category-construction: #fb923c;
+  --category-concepts: #818cf8;
+  --category-nature: #34d399;
+
+  /* Component Tokens */
+  --panel-header-bg: rgba(255, 255, 255, 0.03);
+  --chip-bg: rgba(139, 92, 246, 0.1);
+  --chip-bg-hover: rgba(139, 92, 246, 0.2);
+  --chip-border: rgba(139, 92, 246, 0.2);
+  --chip-border-hover: rgba(139, 92, 246, 0.4);
+  --badge-warning-bg: rgba(251, 191, 36, 0.1);
+  --badge-warning-border: rgba(251, 191, 36, 0.2);
+  --badge-warning-text: #fbbf24;
+  --button-secondary-bg: rgba(255, 255, 255, 0.05);
+  --button-secondary-border: rgba(255, 255, 255, 0.1);
+  --operator-circle-bg: rgba(255, 255, 255, 0.05);
+
+  --accent-primary-hover: #a78bfa;
+  --button-danger-bg-hover: rgba(239, 68, 68, 0.2);
+  --button-danger-text-hover: #ef4444;
+  --button-danger-border-hover: rgba(239, 68, 68, 0.4);
+
+  /* Shadows */
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+
+  /* Typography */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+  color: var(--text-primary);
+}
+
+/* Typography Scale */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 30px var(--accent-glow);
+  }
+}
+
+.premium-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 100%;
+  }
+}
