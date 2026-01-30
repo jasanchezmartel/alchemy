@@ -1,10 +1,12 @@
 <script>
     import { SvelteSet } from "svelte/reactivity";
     import { gameState } from "./store.svelte.js";
-    import { fly, fade } from "svelte/transition";
-    import { CheckCircle2, AlertCircle } from "lucide-svelte";
     import BlackHole from "./components/BlackHole.svelte";
-    import ElementIcon from "./components/ElementIcon.svelte";
+    import CanvasElement from "./components/CanvasElement.svelte";
+    import SelectionBox from "./components/SelectionBox.svelte";
+    import EmptyState from "./components/EmptyState.svelte";
+    import NotificationContainer from "./components/NotificationContainer.svelte";
+    import GameHeader from "./components/GameHeader.svelte";
 
     let { sidebarOpen = true } = $props();
 
@@ -509,12 +511,6 @@
         showNotification("✨ Elemento duplicado", "success", "duplicate");
     }
 
-    function removeCanvasElement(canvasId) {
-        gameState.canvasElements = gameState.canvasElements.filter(
-            (el) => el.canvasId !== canvasId,
-        );
-    }
-
     function showNotification(message, type, stackKey = null, increment = 1) {
         if (stackKey) {
             const existing = notifications.find((n) => n.stackKey === stackKey);
@@ -636,21 +632,13 @@
     style="touch-action: none;"
     tabindex="0"
 >
-    <div class="canvas-header">
-        <h1>⚗️ Alquimia Infinita</h1>
-        <p class="subtitle">Descubre el universo combinando elementos</p>
-    </div>
+    <GameHeader />
 
     <div class="canvas-elements">
         {#each gameState.canvasElements as canvasElement (canvasElement.canvasId)}
-            <div
-                class="canvas-element"
-                class:selected={selectedCanvasIds.has(canvasElement.canvasId)}
-                class:is-new={canvasElement.isNew}
-                class:is-being-sucked={canvasElement.isBeingSucked}
-                class:is-dragging={canvasElement.isDragging}
-                style="left: {canvasElement.x}px; top: {canvasElement.y}px;"
-                data-category={canvasElement.category}
+            <CanvasElement
+                {canvasElement}
+                selected={selectedCanvasIds.has(canvasElement.canvasId)}
                 onmousedown={(e) => {
                     if (e.altKey) {
                         duplicateElement(e, canvasElement);
@@ -665,39 +653,11 @@
                         gameState.selectInfoElement(canvasElement);
                     }
                 }}
-                role="button"
-                tabindex="0"
-                aria-label={canvasElement.name}
-            >
-                <div class="element-icon-wrapper">
-                    <ElementIcon
-                        name={canvasElement.icon}
-                        size={36}
-                        color="var(--cat-color, var(--accent-primary))"
-                        strokeWidth={2.5}
-                    />
-                    <div class="element-glow"></div>
-                </div>
-                <span class="canvas-name">{canvasElement.name}</span>
-            </div>
+            />
         {/each}
     </div>
 
-    {#if isSelecting}
-        <div
-            class="selection-box"
-            style="
-                left: {Math.min(selectionBox.startX, selectionBox.currentX)}px;
-                top: {Math.min(selectionBox.startY, selectionBox.currentY)}px;
-                width: {Math.abs(
-                selectionBox.startX - selectionBox.currentX,
-            )}px;
-                height: {Math.abs(
-                selectionBox.startY - selectionBox.currentY,
-            )}px;
-            "
-        ></div>
-    {/if}
+    <SelectionBox {selectionBox} {isSelecting} />
 
     <BlackHole
         bind:this={blackHoleComponent}
@@ -705,35 +665,9 @@
         ondrop={handleBlackHoleDrop}
     />
 
-    {#if gameState.canvasElements.length === 0}
-        <div class="empty-state" in:fade={{ duration: 500 }}>
-            <div class="empty-icon">🧪</div>
-            <h2 class="empty-text">Tu laboratorio está listo</h2>
-            <p class="empty-hint">
-                Abre el libro de elementos y arrastra ingredientes aquí <br />
-                para comenzar tu gran obra.
-            </p>
-        </div>
-    {/if}
+    <EmptyState visible={gameState.canvasElements.length === 0} />
 
-    <div class="notifications-container">
-        {#each notifications as notification (notification.id)}
-            <div
-                class="notification {notification.type} premium-glass"
-                transition:fly={{ x: -20, duration: 300 }}
-            >
-                {#if notification.type === "success"}
-                    <span class="icon">✨</span>
-                {:else}
-                    <span class="icon">⚠️</span>
-                {/if}
-                <span class="message">{notification.message}</span>
-                {#if notification.count > 1}
-                    <span class="notification-count">{notification.count}</span>
-                {/if}
-            </div>
-        {/each}
-    </div>
+    <NotificationContainer {notifications} />
 </div>
 
 <style>
@@ -746,310 +680,8 @@
         outline: none;
     }
 
-    .canvas-header {
-        position: absolute;
-        top: 2rem;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        z-index: 10;
-        pointer-events: none;
-        width: 100%;
-        padding: 0 20px;
-    }
-
-    h1 {
-        margin: 0;
-        font-size: clamp(1.5rem, 5vw, 3rem);
-        background: linear-gradient(
-            to bottom,
-            #fff 30%,
-            var(--accent-primary) 100%
-        );
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-    }
-
-    .subtitle {
-        margin-top: 0.5rem;
-        color: var(--text-secondary);
-        font-size: clamp(0.875rem, 2vw, 1.125rem);
-        font-weight: 500;
-        opacity: 0.8;
-    }
-
     .canvas-elements {
         position: absolute;
         inset: 0;
-    }
-
-    .canvas-element {
-        position: absolute;
-        width: 85px;
-        height: 85px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: grab;
-        transition:
-            transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-            left 0.3s cubic-bezier(0.23, 1, 0.32, 1),
-            top 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-        z-index: 100;
-        border-radius: var(--border-radius-md);
-        user-select: none;
-        outline: none;
-    }
-
-    .canvas-element:active {
-        cursor: grabbing;
-        transform: scale(1.1);
-        z-index: 1000;
-    }
-
-    .canvas-element.is-dragging {
-        transition: none;
-        z-index: 2000;
-    }
-
-    .element-icon-wrapper {
-        position: relative;
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 6px;
-        transition: all 0.2s ease;
-        border-radius: 50%;
-    }
-
-    .canvas-element.selected .element-icon-wrapper {
-        background: rgba(255, 255, 255, 0.15);
-        border: 2px solid #fff;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-    }
-
-    .canvas-name {
-        font-size: 0.75rem;
-        color: var(--text-primary);
-        font-weight: 600;
-        pointer-events: none;
-        max-width: 85px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .canvas-element.is-new {
-        animation: elementAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .canvas-element.is-being-sucked {
-        transition: all 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045);
-        transform: scale(0) rotate(720deg) !important;
-        opacity: 0;
-        z-index: 1000;
-        pointer-events: none;
-    }
-
-    /* Categories */
-    [data-category="Origen"] {
-        --cat-color: #f87171;
-    }
-    [data-category="Fenómenos"] {
-        --cat-color: #60a5fa;
-    }
-    [data-category="Materiales"] {
-        --cat-color: #a8a29e;
-    }
-    [data-category="Vida"] {
-        --cat-color: #4ade80;
-    }
-    [data-category="Tecnología"] {
-        --cat-color: #22d3ee;
-    }
-    [data-category="Espacio"] {
-        --cat-color: #c084fc;
-    }
-    [data-category="Objetos"] {
-        --cat-color: #fbbf24;
-    }
-    [data-category="Construcción"] {
-        --cat-color: #fb923c;
-    }
-    [data-category="Conceptos"] {
-        --cat-color: #818cf8;
-    }
-    [data-category="Naturaleza"] {
-        --cat-color: #34d399;
-    }
-
-    .selection-box {
-        position: absolute;
-        border: 1px solid var(--accent-primary);
-        background: rgba(139, 92, 246, 0.1);
-        pointer-events: none;
-        z-index: 9999;
-        border-radius: 4px;
-    }
-
-    .empty-state {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        pointer-events: none;
-        width: 100%;
-        max-width: 400px;
-        padding: 20px;
-    }
-
-    .empty-icon {
-        font-size: 5rem;
-        margin-bottom: 1.5rem;
-        opacity: 0.2;
-        animation: float 4s ease-in-out infinite;
-    }
-
-    .empty-text {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: var(--text-primary);
-    }
-
-    .empty-hint {
-        color: var(--text-secondary);
-        font-size: 1rem;
-        line-height: 1.6;
-    }
-
-    .notifications-container {
-        position: fixed;
-        bottom: 2rem;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        z-index: 10000;
-        pointer-events: none;
-        width: fit-content;
-        max-width: 90vw;
-    }
-
-    .notification {
-        padding: 0.75rem 1.25rem;
-        border-radius: var(--border-radius-md);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        pointer-events: auto;
-        color: white;
-        font-weight: 600;
-        font-size: 0.875rem;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .notification.success {
-        border-color: var(--success);
-    }
-    .notification.error {
-        border-color: var(--error);
-    }
-
-    .notification-count {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 1px 8px;
-        border-radius: 10px;
-        font-size: 0.75rem;
-    }
-
-    @media (max-width: 768px) {
-        .canvas-header {
-            top: 1.5rem;
-        }
-        .canvas-element {
-            width: 68px;
-            height: 68px;
-        }
-        .element-icon-wrapper {
-            width: 44px;
-            height: 44px;
-        }
-        .canvas-name {
-            font-size: 0.65rem;
-        }
-
-        .notifications-container {
-            top: 20px;
-            bottom: auto;
-        }
-    }
-
-    @media (orientation: landscape) and (max-height: 520px) {
-        .canvas-header {
-            top: 10px;
-            left: 20px;
-            transform: none;
-            text-align: left;
-            width: auto;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            padding: 8px 16px;
-            border-radius: var(--border-radius-md);
-        }
-
-        h1 {
-            font-size: 1.25rem;
-        }
-        .subtitle {
-            display: none;
-        }
-        .empty-state {
-            transform: translate(-50%, -50%) scale(0.7);
-        }
-
-        .notifications-container {
-            top: auto;
-            bottom: 10px;
-            left: auto;
-            right: 10px;
-            transform: none;
-            align-items: flex-end;
-            max-width: 280px;
-        }
-
-        .notification {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-        }
-    }
-    @keyframes elementAppear {
-        0% {
-            transform: scale(0);
-            opacity: 0;
-        }
-        70% {
-            transform: scale(1.15);
-        }
-        100% {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    @keyframes float {
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-20px);
-        }
     }
 </style>
