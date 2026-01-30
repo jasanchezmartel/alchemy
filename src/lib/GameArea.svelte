@@ -542,12 +542,59 @@
         }
     }
 
+    function ensureElementsInBounds() {
+        if (!gameArea) return;
+        const rect = gameArea.getBoundingClientRect();
+        const padding = 20;
+        const elementSize = 85;
+
+        let changed = false;
+        const boundedElements = gameState.canvasElements.map((el) => {
+            let newX = el.x;
+            let newY = el.y;
+
+            // X bounds
+            if (newX < padding) {
+                newX = padding;
+                changed = true;
+            } else if (newX > rect.width - elementSize - padding) {
+                newX = Math.max(padding, rect.width - elementSize - padding);
+                changed = true;
+            }
+
+            // Y bounds
+            if (newY < padding) {
+                newY = padding;
+                changed = true;
+            } else if (newY > rect.height - elementSize - padding) {
+                newY = Math.max(padding, rect.height - elementSize - padding);
+                changed = true;
+            }
+
+            if (changed) {
+                return { ...el, x: newX, y: newY };
+            }
+            return el;
+        });
+
+        if (changed) {
+            gameState.canvasElements = boundedElements;
+        }
+    }
+
     // Effect for standard event listeners
     $effect(() => {
         if (gameArea) {
             gameArea.addEventListener("sidebarDrop", handleSidebarDrop);
-            return () =>
+            window.addEventListener("resize", ensureElementsInBounds);
+
+            // Initial check to handle mount-time alignment
+            setTimeout(ensureElementsInBounds, 100);
+
+            return () => {
                 gameArea.removeEventListener("sidebarDrop", handleSidebarDrop);
+                window.removeEventListener("resize", ensureElementsInBounds);
+            };
         }
     });
 </script>
@@ -733,7 +780,10 @@
         align-items: center;
         justify-content: center;
         cursor: grab;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition:
+            transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+            left 0.5s ease,
+            top 0.5s ease;
         z-index: 100;
         border-radius: var(--border-radius-md);
         user-select: none;
