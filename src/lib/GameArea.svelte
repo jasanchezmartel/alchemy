@@ -301,11 +301,18 @@
         }
 
         draggedCanvasElement = canvasElement;
-        gameState.canvasElements = gameState.canvasElements.map((el) =>
-            el.canvasId === canvasElement.canvasId
-                ? { ...el, isDragging: true }
-                : el,
-        );
+
+        const isPartofSelection = selectedCanvasIds.has(canvasElement.canvasId);
+
+        gameState.canvasElements = gameState.canvasElements.map((el) => {
+            if (
+                el.canvasId === canvasElement.canvasId ||
+                (isPartofSelection && selectedCanvasIds.has(el.canvasId))
+            ) {
+                return { ...el, isDragging: true };
+            }
+            return el;
+        });
 
         const canvasRect =
             event.currentTarget.parentElement.getBoundingClientRect();
@@ -473,6 +480,13 @@
                 );
             }
         }
+
+        gameState.canvasElements = gameState.canvasElements.map((el) => {
+            if (el.isDragging) {
+                return { ...el, isDragging: false };
+            }
+            return el;
+        });
 
         draggedCanvasElement = null;
     }
@@ -782,8 +796,8 @@
         cursor: grab;
         transition:
             transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-            left 0.5s ease,
-            top 0.5s ease;
+            left 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+            top 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         z-index: 100;
         border-radius: var(--border-radius-md);
         user-select: none;
@@ -808,44 +822,21 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 50%;
         margin-bottom: 6px;
-        transition: all 0.3s ease;
-    }
-
-    .canvas-element:hover .element-icon-wrapper {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: var(--cat-color, var(--accent-primary));
-        transform: translateY(-2px);
-    }
-
-    .element-glow {
-        position: absolute;
-        inset: -5px;
+        transition: all 0.2s ease;
         border-radius: 50%;
-        background: var(--cat-color, var(--accent-primary));
-        opacity: 0;
-        filter: blur(10px);
-        transition: opacity 0.3s ease;
-        z-index: -1;
-    }
-
-    .canvas-element.selected .element-glow {
-        opacity: 0.3;
     }
 
     .canvas-element.selected .element-icon-wrapper {
-        border-color: #fff;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid #fff;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
     }
 
     .canvas-name {
         font-size: 0.75rem;
         color: var(--text-primary);
         font-weight: 600;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         pointer-events: none;
         max-width: 85px;
         overflow: hidden;
@@ -1020,7 +1011,22 @@
             display: none;
         }
         .empty-state {
-            transform: translate(-50%, -40%) scale(0.7);
+            transform: translate(-50%, -50%) scale(0.7);
+        }
+
+        .notifications-container {
+            top: auto;
+            bottom: 10px;
+            left: auto;
+            right: 10px;
+            transform: none;
+            align-items: flex-end;
+            max-width: 280px;
+        }
+
+        .notification {
+            padding: 8px 12px;
+            font-size: 0.8rem;
         }
     }
     @keyframes elementAppear {
@@ -1040,10 +1046,10 @@
     @keyframes float {
         0%,
         100% {
-            transform: translate(-50%, -50%) translateY(0);
+            transform: translateY(0);
         }
         50% {
-            transform: translate(-50%, -50%) translateY(-20px);
+            transform: translateY(-20px);
         }
     }
 </style>

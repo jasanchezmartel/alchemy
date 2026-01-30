@@ -59,9 +59,7 @@
         expandedCategories[cat] = !expandedCategories[cat];
     }
 
-    function handleMouseDown(event, element) {
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) return;
+    function handleDragStart(event, element) {
         if (onDragStart) onDragStart({ event, element });
     }
 </script>
@@ -101,13 +99,16 @@
                                 <div
                                     class="element-item"
                                     onmousedown={(e) =>
-                                        handleMouseDown(e, element)}
+                                        handleDragStart(e, element)}
+                                    ontouchstart={(e) =>
+                                        handleDragStart(e, element)}
                                     role="button"
                                     tabindex="0"
                                     aria-label={element.name}
                                     onclick={() => {
                                         const isMobile =
-                                            window.innerWidth <= 768;
+                                            window.innerWidth <= 768 ||
+                                            window.innerHeight <= 520;
                                         if (isMobile) {
                                             gameState.addElementToCanvas(
                                                 element,
@@ -124,7 +125,8 @@
                                             e.key === " "
                                         ) {
                                             const isMobile =
-                                                window.innerWidth <= 768;
+                                                window.innerWidth <= 768 ||
+                                                window.innerHeight <= 520;
                                             if (isMobile) {
                                                 gameState.addElementToCanvas(
                                                     element,
@@ -272,14 +274,9 @@
         align-items: center;
         gap: 0.5rem;
         cursor: grab;
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         padding: 0.5rem;
         border-radius: var(--border-radius-sm);
-    }
-
-    .element-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-        transform: scale(1.05);
+        touch-action: none;
     }
 
     .element-icon-container {
@@ -288,16 +285,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--glass-border);
-        transition: all 0.3s ease;
-    }
-
-    .element-item:hover .element-icon-container {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: var(--cat-color);
-        box-shadow: 0 0 15px var(--cat-color);
     }
 
     .element-label {

@@ -35,32 +35,62 @@
 
     // Drag Logic Integration
     function handleElementDragStart(detail) {
-        const { event: mouseEvent, element } = detail;
-        mouseEvent.preventDefault();
+        const { event, element } = detail;
+        const isTouch = event.type.startsWith("touch");
+        const clientX = isTouch ? event.touches[0].clientX : event.clientX;
+        const clientY = isTouch ? event.touches[0].clientY : event.clientY;
+
+        // Don't prevent default on touchstart to allow scrolling
+        if (!isTouch) event.preventDefault();
 
         isDraggingFromSidebar = true;
         draggedFromSidebar = element;
 
         dragPreview = {
-            x: mouseEvent.clientX,
-            y: mouseEvent.clientY,
+            x: clientX,
+            y: clientY,
             element: element,
         };
 
-        document.addEventListener("mousemove", handleGlobalMouseMove);
-        document.addEventListener("mouseup", handleGlobalMouseUp);
+        if (isTouch) {
+            document.addEventListener("touchmove", handleGlobalMouseMove, {
+                passive: false,
+            });
+            document.addEventListener("touchend", handleGlobalMouseUp);
+        } else {
+            document.addEventListener("mousemove", handleGlobalMouseMove);
+            document.addEventListener("mouseup", handleGlobalMouseUp);
+        }
         document.body.style.cursor = "grabbing";
     }
 
     function handleGlobalMouseMove(event) {
         if (isDraggingFromSidebar && draggedFromSidebar) {
-            dragPreview.x = event.clientX;
-            dragPreview.y = event.clientY;
+            const isTouch = event.type.startsWith("touch");
+            const clientX = isTouch ? event.touches[0].clientX : event.clientX;
+            const clientY = isTouch ? event.touches[0].clientY : event.clientY;
+
+            // Prevent scrolling while dragging
+            if (isTouch) {
+                event.preventDefault();
+            }
+
+            dragPreview.x = clientX;
+            dragPreview.y = clientY;
         }
     }
 
     function handleGlobalMouseUp(event) {
         if (isDraggingFromSidebar && draggedFromSidebar) {
+            const isTouch = event.type.startsWith("touch");
+            // Touchend doesn't have touches, use changedTouches
+            const clientX = isTouch
+                ? event.changedTouches[0].clientX
+                : event.clientX;
+            const clientY = isTouch
+                ? event.changedTouches[0].clientY
+                : event.clientY;
+
             const sidebarElement = document.querySelector(".sidebar");
             const gameArea = document.querySelector(".game-area");
 
@@ -69,23 +99,23 @@
                 const gameRect = gameArea.getBoundingClientRect();
 
                 const isInsideSidebar =
-                    event.clientX >= sidebarRect.left &&
-                    event.clientX <= sidebarRect.right &&
-                    event.clientY >= sidebarRect.top &&
-                    event.clientY <= sidebarRect.bottom;
+                    clientX >= sidebarRect.left &&
+                    clientX <= sidebarRect.right &&
+                    clientY >= sidebarRect.top &&
+                    clientY <= sidebarRect.bottom;
 
                 if (
                     !isInsideSidebar &&
-                    event.clientX >= gameRect.left &&
-                    event.clientX <= gameRect.right &&
-                    event.clientY >= gameRect.top &&
-                    event.clientY <= gameRect.bottom
+                    clientX >= gameRect.left &&
+                    clientX <= gameRect.right &&
+                    clientY >= gameRect.top &&
+                    clientY <= gameRect.bottom
                 ) {
                     const dropEvent = new CustomEvent("sidebarDrop", {
                         detail: {
                             element: draggedFromSidebar,
-                            x: event.clientX - gameRect.left,
-                            y: event.clientY - gameRect.top,
+                            x: clientX - gameRect.left,
+                            y: clientY - gameRect.top,
                         },
                     });
                     gameArea.dispatchEvent(dropEvent);
@@ -95,8 +125,12 @@
         isDraggingFromSidebar = false;
         draggedFromSidebar = null;
         dragPreview.element = null;
+
         document.removeEventListener("mousemove", handleGlobalMouseMove);
         document.removeEventListener("mouseup", handleGlobalMouseUp);
+        document.removeEventListener("touchmove", handleGlobalMouseMove);
+        document.removeEventListener("touchend", handleGlobalMouseUp);
+
         document.body.style.cursor = "default";
     }
 
@@ -305,42 +339,15 @@
         flex-direction: column;
         align-items: center;
         gap: 0.5rem;
-        transform: translate(-50%, -50%) scale(1.1);
-        animation: previewPulse 1.2s infinite alternate ease-in-out;
-    }
-
-    @keyframes previewPulse {
-        from {
-            transform: translate(-50%, -50%) scale(1.1);
-            opacity: 0.9;
-        }
-        to {
-            transform: translate(-50%, -50%) scale(1.2);
-            opacity: 1;
-        }
-    }
-
-    @keyframes previewPulse {
-        from {
-            transform: translate(-50%, -50%) scale(1.1);
-            opacity: 0.9;
-        }
-        to {
-            transform: translate(-50%, -50%) scale(1.2);
-            opacity: 1;
-        }
+        transform: translate(-50%, -50%);
     }
 
     .preview-icon-wrapper {
         width: 64px;
         height: 64px;
-        border-radius: 50%;
-        background: var(--glass-bg);
-        border: 2px solid var(--accent-primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: var(--glow-shadow);
     }
 
     .drag-preview .name {
